@@ -77,6 +77,40 @@ router.get('/my-reservations', isAuthenticated, (req, res) => {
     });
 });
 
+// Get All Reservations (Admin - Sprint 3)
+router.get('/all', isAuthenticated, (req, res) => {
+    if (req.session.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { date, room_id } = req.query;
+    let sql = `
+        SELECT r.id, r.date, r.start_time, r.end_time, r.status, 
+               rm.name as room_name, u.name as user_name, u.email as user_email
+        FROM reservations r
+        JOIN rooms rm ON r.room_id = rm.id
+        JOIN users u ON r.user_id = u.id
+        WHERE 1=1
+    `;
+    const params = [];
+
+    if (date) {
+        sql += " AND r.date = ?";
+        params.push(date);
+    }
+    if (room_id) {
+        sql += " AND r.room_id = ?";
+        params.push(room_id);
+    }
+
+    sql += " ORDER BY r.date DESC, r.start_time ASC";
+
+    db.all(sql, params, (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Error BD' });
+        res.json(rows);
+    });
+});
+
 // Cancel Reservation
 router.post('/:id/cancel', isAuthenticated, (req, res) => {
     const reservationId = req.params.id;
@@ -87,16 +121,24 @@ router.post('/:id/cancel', isAuthenticated, (req, res) => {
         if (err) return res.status(500).json({ error: 'Error BD' });
         if (!row) return res.status(404).json({ error: 'Reserva no encontrada' });
 
+        // Allow if owner OR Admin (Sprint 3 requirement)
         if (row.user_id !== user_id && req.session.user.role !== 'admin') {
             return res.status(403).json({ error: 'No autorizado' });
         }
 
         if (row.status !== 'active') {
+            // Admin might want to cancel even if 'completed' in edge cases? 
+            // But usually we just cancel 'active'. 
+            // Requirement says "Cancelar reservas".
+            // Let's stick to active for logical consistency unless forced.
+            // If Admin, maybe we allow forcing but let's keep simple.
             return res.status(400).json({ error: 'La reserva no está activa' });
         }
 
         db.run("UPDATE reservations SET status = 'cancelled' WHERE id = ?", [reservationId], function (err) {
             if (err) return res.status(500).json({ error: 'Error cancelando reserva' });
+
+            // Sprint 3: Log reminder cancelled?
             res.json({ message: 'Reserva cancelada' });
         });
     });

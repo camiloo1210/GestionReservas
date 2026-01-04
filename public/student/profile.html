@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Reservas - UDLA</title>
+    <title>Mi Perfil - UDLA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -21,6 +21,20 @@
             font-weight: bold;
         }
 
+        .nav-link {
+            color: #aaa !important;
+        }
+
+        .nav-link.active {
+            color: #fff !important;
+            font-weight: bold;
+        }
+
+        .card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+        }
+
         .btn-primary {
             background-color: #c70039;
             border-color: #c70039;
@@ -30,6 +44,8 @@
             background-color: #900c3f;
             border-color: #900c3f;
         }
+
+        /* Let bootstrap handle form control colors */
     </style>
 </head>
 
@@ -44,7 +60,8 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="dashboard.html">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="availability.html">Ver Disponibilidad</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="my_reservations.html">Mis Reservas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="my_reservations.html">Mis Reservas</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="profile.html">Mi Perfil</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Cerrar Sesión</a></li>
                 </ul>
             </div>
@@ -52,13 +69,32 @@
     </nav>
 
     <div class="container">
-        <h2 class="mb-4">Mis Reservas</h2>
-        <div id="reservationsContainer">
-            <div class="text-center text-muted">Cargando...</div>
+        <h2 class="mb-4">Gestionar Perfil</h2>
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4">
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label class="form-label">Correo Institucional (No editable)</label>
+                            <input type="email" class="form-control" id="email" disabled>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre Completo</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script src="../js/student_reservations.js"></script>
+    <script src="../js/profile.js"></script>
 </body>
 
 </html>

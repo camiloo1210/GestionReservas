@@ -45,7 +45,8 @@ router.post('/login', (req, res) => {
                     id: user.id,
                     name: user.name,
                     email: user.email,
-                    role: user.role
+                    role: user.role,
+                    phone: user.phone
                 };
                 res.json({ message: 'Login successful', role: user.role });
             } else {
@@ -62,6 +63,23 @@ router.get('/me', (req, res) => {
     } else {
         res.status(401).json({ error: 'Not authenticated' });
     }
+});
+
+// Update Profile (Sprint 3)
+router.put('/profile', (req, res) => {
+    if (!req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { name, phone } = req.body;
+    const userId = req.session.user.id;
+
+    db.run("UPDATE users SET name = ?, phone = ? WHERE id = ?", [name, phone, userId], function (err) {
+        if (err) return res.status(500).json({ error: 'Database error' });
+
+        // Update session
+        req.session.user.name = name;
+        req.session.user.phone = phone;
+        res.json({ message: 'Profile updated' });
+    });
 });
 
 // Logout
