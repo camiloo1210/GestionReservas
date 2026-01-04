@@ -1,0 +1,27 @@
+{
+  "name": "gestionreservas",
+  "version": "1.0.0",
+  "description": "Este proyecto consiste en una aplicación web para la gestión y reserva de salas de estudio en la Universidad de las Américas (UDLA). El objetivo es facilitar a los estudiantes el acceso a espacios de estudio y permitir a los administradores una gestión eficiente de los recursos.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/camiloo1210/GestionReservas.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/camiloo1210/GestionReservas/issues"
+  },
+  "homepage": "https://github.com/camiloo1210/GestionReservas#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.1",
+    "express": "^5.2.1",
+    "express-session": "^1.18.2",
+    "sqlite3": "^5.1.7"
+  }
+}
