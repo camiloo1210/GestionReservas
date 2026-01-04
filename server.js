@@ -23,9 +23,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes Placeholder
 const authRoutes = require('./routes/auth');
 const roomRoutes = require('./routes/rooms');
+const reservationRoutes = require('./routes/reservations');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 app.get('/', (req, res) => {
     res.redirect('/index.html');

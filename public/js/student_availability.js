@@ -36,7 +36,7 @@ async function checkAvailability(date) {
                         <hr style="border-color: #555;">
                         <p class="mb-1 text-info">Horario Disponible:</p>
                         <h6 class="mb-3">${room.start_time} - ${room.end_time}</h6>
-                        <button class="btn btn-primary w-100" disabled>Reservar (Próximamente)</button>
+                        <button class="btn btn-primary w-100" onclick="confirmBooking(${room.id}, '${room.name}', '${date}', '${room.start_time}', '${room.end_time}')">Reservar</button>
                     </div>
                 </div>
             `;
@@ -45,6 +45,39 @@ async function checkAvailability(date) {
     } catch (err) {
         console.error(err);
         document.getElementById('roomsContainer').innerHTML = '<div class="alert alert-danger">Error cargando disponibilidad.</div>';
+    }
+}
+
+function confirmBooking(roomId, roomName, date, start, end) {
+    // Ideally use a Modal, but confirm is faster for now
+    if (confirm(`¿Deseas reservar la sala ${roomName} para el ${date} de ${start} a ${end}?`)) {
+        createReservation(roomId, date, start, end);
+    }
+}
+
+async function createReservation(roomId, date, start, end) {
+    try {
+        const res = await fetch('/api/reservations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room_id: roomId,
+                date: date,
+                start_time: start,
+                end_time: end
+            })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            alert('¡Reserva creada exitosamente!');
+            window.location.href = 'my_reservations.html';
+        } else {
+            alert(data.error || 'Error al crear reserva');
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Error de conexión');
     }
 }
 

@@ -45,6 +45,20 @@ function initDb() {
             FOREIGN KEY(room_id) REFERENCES rooms(id)
         )`);
 
+        // Reservations Table (Sprint 2)
+        db.run(`CREATE TABLE IF NOT EXISTS reservations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            room_id INTEGER NOT NULL,
+            date TEXT NOT NULL,
+            start_time TEXT NOT NULL,
+            end_time TEXT NOT NULL,
+            status TEXT CHECK(status IN ('active', 'cancelled', 'completed')) NOT NULL DEFAULT 'active',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(room_id) REFERENCES rooms(id)
+        )`);
+
         // Seed Admin User
         const adminEmail = 'admin@udla.edu.ec';
         const adminPass = 'admin123';
