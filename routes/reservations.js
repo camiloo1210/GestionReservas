@@ -144,4 +144,40 @@ router.post('/:id/cancel', isAuthenticated, (req, res) => {
     });
 });
 
+// ==============================
+// HU14 - Reporte de uso de salas
+// ==============================
+router.get('/report/usage', isAuthenticated, (req, res) => {
+
+    // Solo admin
+    if (req.session.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acceso solo para administradores' });
+    }
+
+    const { start_date, end_date } = req.query;
+
+    if (!start_date || !end_date) {
+        return res.status(400).json({ error: 'Debe seleccionar un rango de fechas' });
+    }
+
+    const sql = `
+        SELECT 
+            rm.name AS room_name,
+            COUNT(r.id) AS total_reservations
+        FROM reservations r
+        JOIN rooms rm ON r.room_id = rm.id
+        WHERE r.date BETWEEN ? AND ?
+        GROUP BY rm.name
+        ORDER BY total_reservations DESC
+    `;
+
+    db.all(sql, [start_date, end_date], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error generando reporte' });
+        }
+        res.json(rows);
+    });
+});
+
+
 module.exports = router;
