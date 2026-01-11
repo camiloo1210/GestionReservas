@@ -24,10 +24,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 const authRoutes = require('./routes/auth');
 const roomRoutes = require('./routes/rooms');
 const reservationRoutes = require('./routes/reservations');
+const reportsRoutes = require('./routes/reports');
+const { checkUpcomingReservations } = require('./utils/reminders');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/reports', reportsRoutes);
+
+// Reminders Interval (HU13)
+setInterval(() => {
+    try {
+        checkUpcomingReservations(db);
+    } catch (e) { console.error(e); }
+}, 60000);
 
 app.get('/', (req, res) => {
     res.redirect('/index.html');

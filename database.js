@@ -54,10 +54,15 @@ function initDb() {
             start_time TEXT NOT NULL,
             end_time TEXT NOT NULL,
             status TEXT CHECK(status IN ('active', 'cancelled', 'completed')) NOT NULL DEFAULT 'active',
+            reminded INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(user_id) REFERENCES users(id),
             FOREIGN KEY(room_id) REFERENCES rooms(id)
-        )`);
+        )`, (err) => {
+            if (err) return;
+            // Hot-fix for dev: try to add column if table exists (ignore error if exists)
+            db.run("ALTER TABLE reservations ADD COLUMN reminded INTEGER DEFAULT 0", () => { });
+        });
 
         // Seed Admin User
         const adminEmail = 'admin@udla.edu.ec';

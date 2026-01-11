@@ -28,7 +28,12 @@ router.post('/', isAdmin, (req, res) => {
     db.run("INSERT INTO rooms (name, capacity, location) VALUES (?, ?, ?)",
         [name, capacity, location],
         function (err) {
-            if (err) return res.status(500).json({ error: 'Database error' });
+            if (err) {
+                if (err.message.includes('UNIQUE') || err.message.includes('constraint')) {
+                    return res.status(400).json({ error: 'Ya existe una sala con ese nombre.' });
+                }
+                return res.status(500).json({ error: 'Database error' });
+            }
             res.json({ id: this.lastID, message: 'Room created' });
         }
     );
@@ -40,7 +45,12 @@ router.put('/:id', isAdmin, (req, res) => {
     db.run("UPDATE rooms SET name=?, capacity=?, location=?, status=? WHERE id=?",
         [name, capacity, location, status, req.params.id],
         function (err) {
-            if (err) return res.status(500).json({ error: 'Database error' });
+            if (err) {
+                if (err.message.includes('UNIQUE') || err.message.includes('constraint')) {
+                    return res.status(400).json({ error: 'Ya existe una sala con ese nombre.' });
+                }
+                return res.status(500).json({ error: 'Database error' });
+            }
             res.json({ message: 'Room updated' });
         }
     );
@@ -99,6 +109,14 @@ router.get('/availability', (req, res) => {
     `;
 
     db.all(sql, [date], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        res.json(rows);
+    });
+});
+
+// Get Schedules for a Room (Admin - Helper for Modal)
+router.get('/:id/schedules', isAdmin, (req, res) => {
+    db.all("SELECT * FROM schedules WHERE room_id = ? ORDER BY date DESC, start_time ASC", [req.params.id], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         res.json(rows);
     });
