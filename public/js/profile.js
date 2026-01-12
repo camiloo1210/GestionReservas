@@ -15,13 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await res.json();
             if (res.ok) {
-                alert('Perfil actualizado correctamente');
+                mostrarModal('Perfil actualizado correctamente', 'ok');
             } else {
-                alert(data.error || 'Error actualizando perfil');
+                mostrarModal(data.error || 'Error actualizando perfil', 'error');
             }
         } catch (err) {
             console.error(err);
-            alert('Error de conexión');
+            mostrarModal('Error de conexión', 'error');
         }
     });
 });
