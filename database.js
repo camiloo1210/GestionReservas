@@ -22,8 +22,15 @@ function initDb() {
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             role TEXT CHECK(role IN ('admin', 'student')) NOT NULL DEFAULT 'student',
-            phone TEXT
-        )`);
+            phone TEXT,
+            reset_token TEXT,
+            reset_expires DATETIME
+        )`, (err) => {
+            if (err) return;
+            // Hot-fix for dev: add columns if not exist
+            db.run("ALTER TABLE users ADD COLUMN reset_token TEXT", () => { });
+            db.run("ALTER TABLE users ADD COLUMN reset_expires DATETIME", () => { });
+        });
 
         // Rooms Table
         db.run(`CREATE TABLE IF NOT EXISTS rooms (

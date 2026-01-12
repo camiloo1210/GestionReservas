@@ -88,6 +88,54 @@ function renderChart(data) {
     });
 }
 
+// Export PDF
+async function exportPDF() {
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+
+    if (!start || !end) return alert('Selecciona un rango de fechas primero');
+
+    try {
+        const res = await fetch(`/api/reports/detailed?start=${start}&end=${end}`);
+        const data = await res.json();
+
+        if (data.length === 0) return alert('No hay datos para exportar');
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(18);
+        doc.text('Reporte de Reservas - UDLA', 14, 22);
+        doc.setFontSize(11);
+        doc.text(`Desde: ${start}  Hasta: ${end}`, 14, 30);
+
+        // Table
+        const tableColumn = ["Fecha", "Horario", "Sala", "Estudiante"];
+        const tableRows = [];
+
+        data.forEach(row => {
+            const schedule = `${row.start_time} - ${row.end_time}`;
+            const rowData = [row.date, schedule, row.room_name, row.user_name];
+            tableRows.push(rowData);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 40,
+            theme: 'grid',
+            headStyles: { fillColor: [199, 0, 57] } // UDLA brand color
+        });
+
+        doc.save(`reporte_uso_${start}_${end}.pdf`);
+
+    } catch (err) {
+        console.error("Error generating PDF", err);
+        alert('Error generando PDF');
+    }
+}
+
 function logout() {
     fetch('/api/auth/logout', { method: 'POST' })
         .then(() => window.location.href = '/index.html');

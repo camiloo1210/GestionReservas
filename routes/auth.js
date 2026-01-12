@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const db = require('../database');
+const logger = require('../utils/logger');
 const router = express.Router();
 
 // Register Student
@@ -83,9 +84,73 @@ router.put('/profile', (req, res) => {
 });
 
 // Logout
+// Forgot Password (HU17)
+router.post('/forgot-password', (req, res) => {
+    const { email } = req.body;
+
+    db.get("SELECT * FROM users WHERE email = ?", [email], (err, user) => {
+        if (err) {
+            logger.error(`Error DB Forgot Password: ${err.message}`);
+            return res.status(500).json({ error: 'Error del servidor' });
+        }
+
+        // Security: Always return success message even if email not found
+        if (!user) {
+            logger.warn(`Forgot Password attempt for non-existent email: ${email}`);
+            return res.json({ message: 'Si el correo existe, recibirás instrucciones.' });
+        }
+
+        // Generate Token (Simple random string)
+        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const expires = Date.now() + 3600000; // 1 hour
+
+        db.run("UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?", [token, expires, user.id], (err) => {
+            if (err) return res.status(500).json({ error: 'Error generando token' });
+
+            // Mock Email Sending (HU17 Criteria)
+            logger.info(`[EMAIL MOCK] Recuperación de contraseña para ${email}`);
+            logger.info(`[LINK] http://localhost:3001/reset_password.html?token=${token}`);
+
+            res.json({ message: 'Si el correo existe, recibirás instrucciones.' });
+        });
+    });
+});
+
+// Reset Password (HU17)
+router.post('/reset-password', (req, res) => {
+    const { token, newPassword } = req.body;
+
+    // Check token and expiration
+    db.get("SELECT * FROM users WHERE reset_token = ?", [token], (err, user) => {
+        if (err || !user) {
+            return res.status(400).json({ error: 'Token inválido o expirado' });
+        }
+
+        if (user.reset_expires < Date.now()) {
+            return res.status(400).json({ error: 'El token ha expirado. Solicita uno nuevo.' });
+        }
+
+        // Hash new password
+        const saltRounds = 10;
+        bcrypt.hash(newPassword, saltRounds, (err, hash) => {
+            if (err) return res.status(500).json({ error: 'Error encriptando password' });
+
+            db.run("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?",
+                [hash, user.id],
+                (err) => {
+                    if (err) return res.status(500).json({ error: 'Error actualizando password' });
+                    logger.info(`Password reset success for user ${user.email}`);
+                    res.json({ message: 'Contraseña actualizada correctamente' });
+                }
+            );
+        });
+    });
+});
+
 router.post('/logout', (req, res) => {
     req.session.destroy();
     res.json({ message: 'Logged out' });
 });
+
 
 module.exports = router;
