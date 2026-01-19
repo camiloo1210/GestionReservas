@@ -23,11 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         window.location.href = '/student/dashboard.html';
                     }
                 } else {
-                    alert(data.error);
+                    Toast.error(data.error);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Error connecting to server');
+                Toast.error('Error connecting to server');
             }
         });
     }
@@ -49,14 +49,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert('Registro exitoso. Por favor inicia sesión.');
+                    Toast.success('Registro exitoso. Por favor inicia sesión.');
                     window.location.href = 'index.html';
                 } else {
-                    alert(data.error);
+                    Toast.error(data.error);
                 }
             } catch (err) {
                 console.error(err);
-                alert('Error connecting to server');
+                Toast.error('Error connecting to server');
             }
         });
     }

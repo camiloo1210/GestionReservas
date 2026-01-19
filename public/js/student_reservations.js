@@ -54,22 +54,52 @@ async function loadMyReservations() {
 }
 
 async function cancelReservation(id) {
-    if (!confirm('¿Seguro que deseas cancelar esta reserva?')) return;
-
-    try {
-        const res = await fetch(`/api/reservations/${id}/cancel`, { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) {
-            alert('Reserva cancelada');
-            loadMyReservations();
-        } else {
-            alert(data.error);
+    showConfirmModal('¿Seguro que deseas cancelar esta reserva?', async () => {
+        try {
+            const res = await fetch(`/api/reservations/${id}/cancel`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                Toast.success('Reserva cancelada');
+                loadMyReservations();
+            } else {
+                Toast.error(data.error);
+            }
+        } catch (err) {
+            console.error(err);
         }
-    } catch (err) {
-        console.error(err);
-    }
+    });
 }
 
+function showConfirmModal(message, onConfirm) {
+    if (!document.getElementById('confirmModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-warning">
+                        <div class="modal-header bg-warning text-dark">
+                            <h5 class="modal-title">⚠️ Confirmar</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="confirmModalBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn btn-warning" id="confirmModalBtn">Sí, cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    document.getElementById('confirmModalBody').innerHTML = `<p>${message}</p>`;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmBtn = document.getElementById('confirmModalBtn');
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+    newBtn.addEventListener('click', () => { modal.hide(); onConfirm(); });
+    modal.show();
+}
 function logout() {
     fetch('/api/auth/logout', { method: 'POST' })
         .then(() => window.location.href = '/index.html');

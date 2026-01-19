@@ -32,7 +32,7 @@ async function loadReservations(date = '', roomId = '') {
 
         const res = await fetch(url);
         if (res.status === 403) {
-            alert('Acceso denegado');
+            Toast.error('Acceso denegado');
             window.location.href = '/index.html';
             return;
         }
@@ -73,19 +73,50 @@ async function loadReservations(date = '', roomId = '') {
 }
 
 async function cancelReservation(id) {
-    if (!confirm('¿Cancelar esta reserva como Administrador?')) return;
-    try {
-        const res = await fetch(`/api/reservations/${id}/cancel`, { method: 'POST' });
-        if (res.ok) {
-            alert('Reserva cancelada');
-            // Refresh current view
-            const date = document.getElementById('filterDate').value;
-            const roomId = document.getElementById('filterRoom').value;
-            loadReservations(date, roomId);
-        } else {
-            alert('Error al cancelar');
-        }
-    } catch (err) { console.error(err); }
+    showConfirmModal('¿Cancelar esta reserva como Administrador?', async () => {
+        try {
+            const res = await fetch(`/api/reservations/${id}/cancel`, { method: 'POST' });
+            if (res.ok) {
+                Toast.success('Reserva cancelada');
+                const date = document.getElementById('filterDate').value;
+                const roomId = document.getElementById('filterRoom').value;
+                loadReservations(date, roomId);
+            } else {
+                Toast.error('Error al cancelar');
+            }
+        } catch (err) { console.error(err); }
+    });
+}
+
+function showConfirmModal(message, onConfirm) {
+    if (!document.getElementById('confirmModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-danger">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">⚠️ Confirmar</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="confirmModalBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn btn-danger" id="confirmModalBtn">Sí, cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    document.getElementById('confirmModalBody').innerHTML = `<p>${message}</p>`;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmBtn = document.getElementById('confirmModalBtn');
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+    newBtn.addEventListener('click', () => { modal.hide(); onConfirm(); });
+    modal.show();
 }
 
 function logout() {

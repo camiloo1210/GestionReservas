@@ -180,4 +180,43 @@ router.get('/report/usage', isAuthenticated, (req, res) => {
 });
 
 
+// GET Upcoming Reservations (For Reminder Popup - HU13)
+router.get('/upcoming', (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const userId = req.session.user.id;
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+
+    // Get today's active reservations for this user
+    const sql = `
+        SELECT r.id, r.date, r.start_time, r.end_time, rm.name as room_name, rm.location
+        FROM reservations r
+        JOIN rooms rm ON r.room_id = rm.id
+        WHERE r.user_id = ? AND r.date = ? AND r.status = 'active'
+    `;
+
+    db.all(sql, [userId, today], (err, rows) => {
+        if (err) return res.status(500).json({ error: 'Error DB' });
+
+        // Filter: Only reservations starting in the next 60 minutes
+        const upcoming = rows.filter(r => {
+            const [h, m] = r.start_time.split(':').map(Number);
+            const resDate = new Date();
+            resDate.setHours(h, m, 0, 0);
+
+            const diffMs = resDate - now;
+            const diffMins = diffMs / 1000 / 60;
+
+            return diffMins > 0 && diffMins <= 60;
+        });
+
+        res.json(upcoming);
+    });
+});
+
 module.exports = router;

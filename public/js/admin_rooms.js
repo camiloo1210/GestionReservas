@@ -45,13 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (res.ok) {
-                alert(editingRoomId ? 'Sala actualizada' : 'Sala creada');
+                Toast.success(editingRoomId ? 'Sala actualizada' : 'Sala creada');
                 document.getElementById('createRoomForm').reset();
                 bootstrap.Modal.getInstance(document.getElementById('createRoomModal')).hide();
                 loadRooms();
             } else {
                 const data = await res.json();
-                alert(data.error || 'Error al guardar');
+                Toast.error(data.error || 'Error al guardar');
             }
         } catch (err) {
             console.error(err);
@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ date, start_time, end_time })
             });
             if (res.ok) {
-                alert('Horario asignado');
+                Toast.success('Horario asignado');
                 const modal = bootstrap.Modal.getInstance(document.getElementById('scheduleModal'));
                 modal.hide();
             } else {
                 const data = await res.json();
-                alert(data.error || 'Error asignando horario');
+                Toast.error(data.error || 'Error asignando horario');
             }
         } catch (err) {
             console.error(err);
@@ -187,13 +187,61 @@ async function loadRoomSchedules(roomId) {
     }
 }
 
+let pendingDeleteId = null;
+
 async function deleteRoom(id) {
-    if (!confirm('¿Seguro que deseas eliminar esta sala?')) return;
-    try {
-        const res = await fetch(`/api/rooms/${id}`, { method: 'DELETE' });
-        if (res.ok) loadRooms();
-        else alert('Error eliminando sala');
-    } catch (err) { console.error(err); }
+    pendingDeleteId = id;
+    showConfirmModal('¿Seguro que deseas eliminar esta sala?', async () => {
+        try {
+            const res = await fetch(`/api/rooms/${pendingDeleteId}`, { method: 'DELETE' });
+            if (res.ok) {
+                Toast.success('Sala eliminada');
+                loadRooms();
+            } else {
+                Toast.error('Error eliminando sala');
+            }
+        } catch (err) { console.error(err); }
+    });
+}
+
+function showConfirmModal(message, onConfirm) {
+    // Check if modal exists, if not create it
+    if (!document.getElementById('confirmModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-danger">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">⚠️ Confirmar Acción</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="confirmModalBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-danger" id="confirmModalBtn">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    document.getElementById('confirmModalBody').innerHTML = `<p>${message}</p>`;
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmBtn = document.getElementById('confirmModalBtn');
+
+    // Remove old listeners
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+    newBtn.addEventListener('click', () => {
+        modal.hide();
+        onConfirm();
+    });
+
+    modal.show();
 }
 
 // Logout

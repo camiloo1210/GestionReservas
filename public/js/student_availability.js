@@ -49,10 +49,40 @@ async function checkAvailability(date) {
 }
 
 function confirmBooking(roomId, roomName, date, start, end) {
-    // Ideally use a Modal, but confirm is faster for now
-    if (confirm(`¿Deseas reservar la sala ${roomName} para el ${date} de ${start} a ${end}?`)) {
+    showConfirmModal(`¿Deseas reservar la sala <strong>${roomName}</strong> para el <strong>${date}</strong> de <strong>${start}</strong> a <strong>${end}</strong>?`, () => {
         createReservation(roomId, date, start, end);
+    });
+}
+
+function showConfirmModal(message, onConfirm) {
+    if (!document.getElementById('confirmModal')) {
+        const modalHTML = `
+            <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-primary">
+                        <div class="modal-header" style="background-color: #c70039; color: white;">
+                            <h5 class="modal-title">📅 Confirmar Reserva</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="confirmModalBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="confirmModalBtn" style="background-color: #c70039; border-color: #c70039;">Reservar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
+
+    document.getElementById('confirmModalBody').innerHTML = `<p>${message}</p>`;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const confirmBtn = document.getElementById('confirmModalBtn');
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+    newBtn.addEventListener('click', () => { modal.hide(); onConfirm(); });
+    modal.show();
 }
 
 async function createReservation(roomId, date, start, end) {
@@ -70,14 +100,14 @@ async function createReservation(roomId, date, start, end) {
 
         const data = await res.json();
         if (res.ok) {
-            alert('¡Reserva creada exitosamente!');
+            Toast.success('¡Reserva creada exitosamente!');
             window.location.href = 'my_reservations.html';
         } else {
-            alert(data.error || 'Error al crear reserva');
+            Toast.error(data.error || 'Error al crear reserva');
         }
     } catch (err) {
         console.error(err);
-        alert('Error de conexión');
+        Toast.error('Error de conexión');
     }
 }
 
